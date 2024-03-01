@@ -12,26 +12,19 @@ import java.util.*;
 
 @Slf4j
 @RestController
+@RequestMapping("/users")
 public class UserController {
     private final List<User> users = new ArrayList<>();
 
-    @GetMapping("/users")
+    @GetMapping
     public List<User> getUsers() {
         log.debug("Текущее количество пользователей: {}", users.size());
         return users;
     }
 
-    @PostMapping(value = "/users")
+    @PostMapping
     public User create(@Valid @RequestBody User user) {
-        if (user.getLogin().contains(" ")) {
-            throw new ValidationException("У пользователя пробелы в логине: " + user.getLogin());
-        }
-        if (user.getName() == null || user.getName().isEmpty()) {
-            user.setName(user.getLogin());
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Дата рождения не может быть в будущем: " + user.getBirthday());
-        }
+        validateUser(user);
 
         user.setId(users.size() + 1);
 
@@ -44,17 +37,9 @@ public class UserController {
         return user;
     }
 
-    @PutMapping(value = "/users")
+    @PutMapping
     public User update(@Valid @RequestBody User user) {
-        if (user.getLogin().contains(" ")) {
-            throw new ValidationException("У пользователя пробелы в логине: " + user.getLogin());
-        }
-        if (user.getName() == null || user.getName().isEmpty()) {
-            user.setName(user.getLogin());
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Дата рождения не может быть в будущем: " + user.getBirthday());
-        }
+        validateUser(user);
 
         if (users.contains(user)) {
             users.remove(user);
@@ -65,5 +50,17 @@ public class UserController {
         log.debug("Текущий пользователь: {}", user);
         users.add(user);
         return user;
+    }
+
+    private void validateUser(User user) {
+        if (user.getLogin().contains(" ")) {
+            throw new ValidationException("У пользователя пробелы в логине: " + user.getLogin());
+        }
+        if (user.getName() == null || user.getName().isEmpty()) {
+            user.setName(user.getLogin());
+        }
+        if (user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ValidationException("Дата рождения не может быть в будущем: " + user.getBirthday());
+        }
     }
 }

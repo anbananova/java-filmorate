@@ -13,29 +13,19 @@ import java.util.List;
 
 @Slf4j
 @RestController
+@RequestMapping("/films")
 public class FilmController {
     private final List<Film> films = new ArrayList<>();
 
-    @GetMapping("/films")
+    @GetMapping
     public List<Film> getFilms() {
         log.debug("Текущее количество фильмов: {}", films.size());
         return films;
     }
 
-    @PostMapping(value = "/films")
+    @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        if (film.getDescription().length() > 200) {
-            throw new ValidationException("Описание фильмов превышает 200 символов. Длина: "
-                    + film.getDescription().length());
-        }
-        if (film.getReleaseDate().isBefore(LocalDate.parse("1895-12-28"))) {
-            throw new ValidationException("Дата релиза не может быть в раньше 28 декабря 1895 года: "
-                    + film.getReleaseDate());
-        }
-        if (film.getDuration() < 0) {
-            throw new ValidationException("Продолжительность фильма должна быть положительной: "
-                    + film.getDuration());
-        }
+        validateFilm(film);
 
         film.setId(films.size() + 1);
 
@@ -48,8 +38,22 @@ public class FilmController {
         return film;
     }
 
-    @PutMapping(value = "/films")
+    @PutMapping
     public Film update(@Valid @RequestBody Film film) {
+        validateFilm(film);
+
+        if (films.contains(film)) {
+            films.remove(film);
+        } else {
+            throw new ValidationException("Такого фильма не существует: " + film);
+        }
+
+        log.debug("Текущий фильм: {}", film);
+        films.add(film);
+        return film;
+    }
+
+    private void validateFilm(Film film) {
         if (film.getDescription().length() > 200) {
             throw new ValidationException("Описание фильмов превышает 200 символов. Длина: "
                     + film.getDescription().length());
@@ -62,15 +66,5 @@ public class FilmController {
             throw new ValidationException("Продолжительность фильма должна быть положительной: "
                     + film.getDuration());
         }
-
-        if (films.contains(film)) {
-            films.remove(film);
-        } else {
-            throw new ValidationException("Такого фильма не существует: " + film);
-        }
-
-        log.debug("Текущий фильм: {}", film);
-        films.add(film);
-        return film;
     }
 }
