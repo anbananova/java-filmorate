@@ -5,6 +5,8 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -20,6 +22,7 @@ public class Film {
     @NotNull
     private final LocalDate releaseDate;
     private final int duration;
+    private Map<Integer, Integer> likes;
 
     @Override
     public boolean equals(Object o) {
@@ -32,5 +35,26 @@ public class Film {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public void addLike(Integer userId) {
+        try {
+            likes.put(userId, 1);
+        } catch (NullPointerException e) {
+            likes = new HashMap<>();
+            likes.put(userId, 1);
+        }
+    }
+
+    public void removeLike(Integer userId) {
+        likes.remove(userId);
+    }
+
+    public int getLikeCount() {
+        try {
+            return likes.values().stream().mapToInt(v -> v).sum();
+        } catch (NullPointerException e) {
+            return 0;
+        }
     }
 }
