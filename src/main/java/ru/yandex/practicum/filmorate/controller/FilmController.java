@@ -19,8 +19,6 @@ public class FilmController {
         this.filmService = filmService;
     }
 
-    private final List<Film> films = new ArrayList<>();
-
     @GetMapping
     public List<Film> getFilms() {
         return filmService.getFilms();
