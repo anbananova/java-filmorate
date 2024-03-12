@@ -1,66 +1,63 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.UserAlreadyExistException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.*;
 
-@Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final List<User> users = new ArrayList<>();
+    private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public List<User> getUsers() {
-        log.debug("Текущее количество пользователей: {}", users.size());
-        return users;
+        return userService.getUsers();
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        validateUser(user);
-
-        user.setId(users.size() + 1);
-
-        if (users.contains(user)) {
-            throw new UserAlreadyExistException("Пользователь уже был добавлен: " + user);
-        }
-
-        log.debug("Текущий пользователь: {}", user);
-        users.add(user);
-        return user;
+        return userService.create(user);
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
-        validateUser(user);
-
-        if (users.contains(user)) {
-            users.remove(user);
-        } else {
-            throw new ValidationException("Такого пользователя не существует: " + user);
-        }
-
-        log.debug("Текущий пользователь: {}", user);
-        users.add(user);
-        return user;
+        return userService.update(user);
     }
 
-    private void validateUser(User user) {
-        if (user.getLogin().contains(" ")) {
-            throw new ValidationException("У пользователя пробелы в логине: " + user.getLogin());
-        }
-        if (user.getName() == null || user.getName().isEmpty()) {
-            user.setName(user.getLogin());
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Дата рождения не может быть в будущем: " + user.getBirthday());
-        }
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable("id") Integer userId) {
+        return userService.getUserById(userId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getUserFriends(@PathVariable("id") Integer id) {
+        return userService.getUserFriends(id);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public User addFriend(@PathVariable("id") Integer userId,
+                          @PathVariable("friendId") Integer friendId) {
+        return userService.addFriend(userId, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public User removeFriend(@PathVariable("id") Integer userId,
+                             @PathVariable("friendId") Integer friendId) {
+        return userService.removeFriend(userId, friendId);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable("id") Integer userId,
+                                       @PathVariable("otherId") Integer otherUserId) {
+        return userService.getCommonFriends(userId, otherUserId);
     }
 }
