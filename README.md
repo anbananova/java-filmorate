@@ -5,7 +5,6 @@
 
 ### ER-диаграмма Filmorate:
 ![Filmorate.png](src%2Fmain%2Fresources%2FFilmorate.png)
-
 ### Описание базы данных Filmorate:
 #### users  
 Содержит данные о пользователях.  
