@@ -6,6 +6,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -23,6 +24,8 @@ public class Film {
     private final LocalDate releaseDate;
     private final int duration;
     private Map<Integer, Integer> likes;
+    private final List<Genres> genres;
+    private final Ratings rating;
 
     @Override
     public boolean equals(Object o) {

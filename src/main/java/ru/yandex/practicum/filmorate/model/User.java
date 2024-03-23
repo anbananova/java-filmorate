@@ -26,6 +26,7 @@ public class User {
     @NotNull
     private final LocalDate birthday;
     private Set<Long> friends;
+    private final FriendshipStatus friendshipStatus;
 
     @Override
     public boolean equals(Object o) {
