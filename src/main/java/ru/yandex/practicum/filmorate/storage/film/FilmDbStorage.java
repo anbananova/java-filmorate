@@ -212,6 +212,13 @@ public class FilmDbStorage implements FilmStorage {
             for (Genre genre : genres) {
                 Integer genreId = genre.getId();
 
+                SqlRowSet rowsGenreExists = jdbcTemplate.queryForRowSet(
+                        "SELECT * FROM film_genre WHERE film_id = ? AND genre_id = ?", film.getId(), genreId);
+
+                if (rowsGenreExists.next()) {
+                    throw new ValidationException("Жанр с id уже был добавлен: " + genreId);
+                }
+
                 jdbcTemplate.update(
                         "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)",
                         film.getId(), genreId
