@@ -4,13 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,9 +60,13 @@ public class UserService {
         User user = userStorage.getUser(userId).orElse(null);
         User friend = userStorage.getUser(friendId).orElse(null);
 
-        if (user != null && friend != null) {
-            userStorage.addFriend(user, friend);
+        if (user == null) {
+            throw new NotFoundException("Пользователя не существует с таким id: " + userId);
         }
+        if (friend == null) {
+            throw new NotFoundException("Пользователя не существует с таким id: " + friendId);
+        }
+        userStorage.addFriend(user, friend);
 
         log.debug("addFriend Текущий пользователь: {}", user);
         log.debug("addFriend Друг для добавления: {}", friend);
@@ -72,9 +76,16 @@ public class UserService {
     public User removeFriend(Integer userId, Integer friendId) {
         User user = userStorage.getUser(userId).orElse(null);
         User friend = userStorage.getUser(friendId).orElse(null);
-        if (user != null && friend != null) {
-            userStorage.removeFriend(user, friend);
+
+        if (user == null) {
+            throw new NotFoundException("Пользователя не существует с таким id: " + userId);
         }
+        if (friend == null) {
+            throw new NotFoundException("Пользователя не существует с таким id: " + friendId);
+        }
+
+        userStorage.removeFriend(user, friend);
+
 
         log.debug("removeFriend Текущий пользователь: {}", user);
         log.debug("removeFriend Друг для удаления: {}", friend);
@@ -83,14 +94,16 @@ public class UserService {
 
     public List<User> getUserFriends(Integer userId) {
         User user = userStorage.getUser(userId).orElse(null);
-        List<User> userFriends = new ArrayList<>();
-
-        if (user != null) {
-            userFriends = userStorage.getUserFriends(user);
-            log.debug("getUserFriends Текущий пользователь: {}", user);
-            log.debug("getUserFriends Друзья пользователя {}: {}", user.getId(), userFriends.stream().map(User::getId)
-                    .collect(Collectors.toList()));
+        List<User> userFriends;
+        if (user == null) {
+            throw new NotFoundException("Пользователя не существует с таким id: " + userId);
         }
+
+        userFriends = userStorage.getUserFriends(user);
+        log.debug("getUserFriends Текущий пользователь: {}", user);
+        log.debug("getUserFriends Друзья пользователя {}: {}", user.getId(), userFriends.stream().map(User::getId)
+                .collect(Collectors.toList()));
+
         return userFriends;
     }
 
