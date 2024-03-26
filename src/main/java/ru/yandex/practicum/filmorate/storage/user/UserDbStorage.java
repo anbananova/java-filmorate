@@ -52,16 +52,8 @@ public class UserDbStorage implements UserStorage {
     public User update(User user) {
         if (getUser(user.getId()).isPresent()) {
             jdbcTemplate.update(
-                    "UPDATE users SET email = ? WHERE id = ?", user.getEmail(), user.getId()
-            );
-            jdbcTemplate.update(
-                    "UPDATE users SET login = ? WHERE id = ?", user.getLogin(), user.getId()
-            );
-            jdbcTemplate.update(
-                    "UPDATE users SET name = ? WHERE id = ?", user.getName(), user.getId()
-            );
-            jdbcTemplate.update(
-                    "UPDATE users SET birthday = ? WHERE id = ?", user.getBirthday(), user.getId()
+                    "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?",
+                    user.getEmail(), user.getLogin(), user.getName(), user.getBirthday(), user.getId()
             );
         } else {
             throw new NotFoundException("Такого пользователя не существует: " + user);
@@ -141,20 +133,12 @@ public class UserDbStorage implements UserStorage {
                 FriendshipStatus.valueOf(friendUser.getString("friendship_status")) == FriendshipStatus.UNACCEPTED) {
             // одобряем дружбу со стороны friend - user
             jdbcTemplate.update(
-                    "UPDATE friends SET friendship_status = 'ACCEPTED' WHERE user_id = ? AND friend_id = ?",
-                    friend.getId(), user.getId()
-            );
-            jdbcTemplate.update(
-                    "UPDATE friends SET last_updated = NOW() WHERE user_id = ? AND friend_id = ?",
+                    "UPDATE friends SET friendship_status = 'ACCEPTED', last_updated = NOW() WHERE user_id = ? AND friend_id = ?",
                     friend.getId(), user.getId()
             );
             // одобряем дружбу со стороны user - friend
             jdbcTemplate.update(
-                    "UPDATE friends SET friendship_status = 'ACCEPTED' WHERE user_id = ? AND friend_id = ?",
-                    user.getId(), friend.getId()
-            );
-            jdbcTemplate.update(
-                    "UPDATE friends SET last_updated = NOW() WHERE user_id = ? AND friend_id = ?",
+                    "UPDATE friends SET friendship_status = 'ACCEPTED', last_updated = NOW() WHERE user_id = ? AND friend_id = ?",
                     user.getId(), friend.getId()
             );
         }
