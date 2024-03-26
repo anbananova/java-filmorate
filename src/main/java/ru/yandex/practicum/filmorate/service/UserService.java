@@ -2,16 +2,17 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -19,7 +20,7 @@ public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("Db") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -51,15 +52,21 @@ public class UserService {
 
 
     public User getUserById(Integer userId) {
-        return userStorage.getUser(userId);
+        return userStorage.getUser(userId).orElse(null);
     }
 
 
     public User addFriend(Integer userId, Integer friendId) {
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
-        user.addFriend((long) friendId);
-        friend.addFriend((long) userId);
+        User user = userStorage.getUser(userId).orElse(null);
+        User friend = userStorage.getUser(friendId).orElse(null);
+
+        if (user == null) {
+            throw new NotFoundException("Пользователя не существует с таким id: " + userId);
+        }
+        if (friend == null) {
+            throw new NotFoundException("Пользователя не существует с таким id: " + friendId);
+        }
+        userStorage.addFriend(user, friend);
 
         log.debug("addFriend Текущий пользователь: {}", user);
         log.debug("addFriend Друг для добавления: {}", friend);
@@ -67,18 +74,18 @@ public class UserService {
     }
 
     public User removeFriend(Integer userId, Integer friendId) {
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
-        try {
-            user.removeFriend((long) friendId);
-        } catch (NullPointerException e) {
-            System.out.println("Нет друзей у пользователя: " + user);
+        User user = userStorage.getUser(userId).orElse(null);
+        User friend = userStorage.getUser(friendId).orElse(null);
+
+        if (user == null) {
+            throw new NotFoundException("Пользователя не существует с таким id: " + userId);
         }
-        try {
-            friend.removeFriend((long) userId);
-        } catch (NullPointerException e) {
-            System.out.println("Нет друзей у пользователя: " + friend);
+        if (friend == null) {
+            throw new NotFoundException("Пользователя не существует с таким id: " + friendId);
         }
+
+        userStorage.removeFriend(user, friend);
+
 
         log.debug("removeFriend Текущий пользователь: {}", user);
         log.debug("removeFriend Друг для удаления: {}", friend);
@@ -86,20 +93,17 @@ public class UserService {
     }
 
     public List<User> getUserFriends(Integer userId) {
-        List<User> userFriends = new ArrayList<>();
-        User user = userStorage.getUser(userId);
-        Set<Long> userFriendsId = user.getFriends();
-
-        try {
-            for (long friendId : userFriendsId) {
-                userFriends.add(userStorage.getUser((int) friendId));
-            }
-        } catch (NullPointerException e) {
-            System.out.println("Нет друзей у пользователя: " + user);
+        User user = userStorage.getUser(userId).orElse(null);
+        List<User> userFriends;
+        if (user == null) {
+            throw new NotFoundException("Пользователя не существует с таким id: " + userId);
         }
 
+        userFriends = userStorage.getUserFriends(user);
         log.debug("getUserFriends Текущий пользователь: {}", user);
-        log.debug("getUserFriends Друзья пользователя: {}", userFriendsId);
+        log.debug("getUserFriends Друзья пользователя {}: {}", user.getId(), userFriends.stream().map(User::getId)
+                .collect(Collectors.toList()));
+
         return userFriends;
     }
 

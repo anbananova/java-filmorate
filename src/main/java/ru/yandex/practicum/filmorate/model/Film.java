@@ -1,19 +1,16 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
-/**
- * Film.
- */
 @Data
+@AllArgsConstructor
 public class Film {
     private int id;
     @NotNull
@@ -23,9 +20,8 @@ public class Film {
     @NotNull
     private final LocalDate releaseDate;
     private final int duration;
-    private Map<Integer, Integer> likes;
-    private final List<Genres> genres;
-    private final Ratings rating;
+    private Mpa mpa;
+    private List<Genre> genres;
 
     @Override
     public boolean equals(Object o) {
@@ -38,26 +34,5 @@ public class Film {
     @Override
     public int hashCode() {
         return Objects.hash(id);
-    }
-
-    public void addLike(Integer userId) {
-        try {
-            likes.put(userId, 1);
-        } catch (NullPointerException e) {
-            likes = new HashMap<>();
-            likes.put(userId, 1);
-        }
-    }
-
-    public void removeLike(Integer userId) {
-        likes.remove(userId);
-    }
-
-    public int getLikeCount() {
-        try {
-            return likes.values().stream().mapToInt(v -> v).sum();
-        } catch (NullPointerException e) {
-            return 0;
-        }
     }
 }

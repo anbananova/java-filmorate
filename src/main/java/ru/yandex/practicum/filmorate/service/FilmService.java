@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -9,9 +10,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -19,7 +18,7 @@ public class FilmService {
     private final FilmStorage filmStorage;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage) {
+    public FilmService(@Qualifier("Db") FilmStorage filmStorage) {
         this.filmStorage = filmStorage;
     }
 
@@ -53,23 +52,23 @@ public class FilmService {
     }
 
     public Film getFilmById(Integer filmId) {
-        return filmStorage.getFilm(filmId);
+        return filmStorage.getFilm(filmId).orElse(null);
     }
 
     public Film addLike(Integer filmId, Integer userId) {
-        Film film = filmStorage.getFilm(filmId);
-        film.addLike(userId);
+        Film film = filmStorage.getFilm(filmId).orElse(null);
+        if (film != null) {
+            filmStorage.addLike(filmId, userId);
+        }
 
         log.debug("addLike Текущий фильм: {}", film);
         return film;
     }
 
     public Film removeLike(Integer filmId, Integer userId) {
-        Film film = filmStorage.getFilm(filmId);
-        try {
-            film.removeLike(userId);
-        } catch (NullPointerException e) {
-            System.out.println("Нет лайков у фильма: " + film);
+        Film film = filmStorage.getFilm(filmId).orElse(null);
+        if (film != null) {
+            filmStorage.removeLike(filmId, userId);
         }
 
         log.debug("removeLike Текущий фильм: {}", film);
@@ -78,9 +77,6 @@ public class FilmService {
 
     public List<Film> getNFilms(Integer count) {
         log.debug("getNFilms Вернуть {} фильмов.", count);
-        return filmStorage.getAll().stream()
-                .sorted(Comparator.comparing(Film::getLikeCount).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
+        return filmStorage.getNFilms(count);
     }
 }
